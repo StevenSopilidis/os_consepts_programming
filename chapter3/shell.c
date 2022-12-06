@@ -104,12 +104,42 @@ int main(int argc, char* argv[])
                 // get the commmand & arguments
                 char* instruction = get_instruction(command_buffer, &consumed);
                 int args_len = get_arguments(command_buffer,instruction, consumed, args);
-                
-                // if its change directory
-                if(!strcmp(instruction, "cd"))
+
+                if(!strcmp(instruction, "<") || !strcmp(instruction, ">"))
                 {
-                    // will change from parent directory
+                    printf("Invalid command\n");
                     exit(0);
+                }
+                
+                // loop arguments and check for redirection
+                // skip command file
+                for(int i = 1; i < args_len; i++)
+                {
+                    int fd;
+                    if(!strcmp("<", args[i]))
+                    {
+                        // check if file specified on the left
+                        if(i == args_len - 1)
+                        {
+                            printf("Invalid input\n");
+                            exit(0);
+                        }
+                        fd = open(args[i + 1], O_RDONLY, 0);
+                        dup2(fd, STDIN_FILENO);
+                        args+=2;
+                        i+=2;
+                    }else if(!strcmp(">", args[i]))
+                    {
+                        if(i == args_len - 1)
+                        {
+                            printf("Invalid input\n");
+                            exit(0);
+                        }
+                        fd = creat(args[i + 1], 0644);
+                        dup2(fd, STDOUT_FILENO);
+                        args+=2;
+                        i+=2;
+                    }
                 }
                 
                 // if last char is & remove it since it just 
